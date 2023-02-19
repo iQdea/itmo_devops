@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: app
+    container_name: app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./static:/usr/share/nginx/html
+      - ./nginx.conf:/usr/local/nginx/conf/nginx.conf

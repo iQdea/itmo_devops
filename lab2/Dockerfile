@@ -1,17 +1,29 @@
-FROM alpine:3.2 as build
+FROM alpine:latest AS build
 
-ENV NGINX_VERSION nginx-1.9.12
+ARG VERSION=1.23.3
+ARG NGINX_DOWNLOAD_URL=http://nginx.org/download/nginx-${VERSION}.tar.gz
 
-RUN apk --update add openssl-dev pcre-dev zlib-dev wget build-base
-RUN mkdir -p /tmp/src
-RUN cd /tmp/src
-RUN wget http://nginx.org/download/${NGINX_VERSION}.tar.gz
-RUN tar -zxvf ${NGINX_VERSION}.tar.gz
-RUN chmod a+rx ${NGINX_VERSION}
-RUN cd ${NGINX_VERSION} && \
-./configure                                                                     \
+WORKDIR /tmp
+RUN apk --no-cache --update add                                                     \
+        build-base                                                                  \
+        gnupg                                                                       \
+        pcre-dev                                                                    \
+        wget                                                                        \
+        zlib-dev                                                                    \
+        linux-headers                                                               \
+        libressl-dev                                                                \
+        zlib-static
+
+RUN set -x                                                                      &&  \
+    wget -q $NGINX_DOWNLOAD_URL && \
+    tar -xf nginx-${VERSION}.tar.gz && \
+    echo ${VERSION}
+
+WORKDIR /tmp/nginx-${VERSION}
+RUN ./configure                                                                     \
         --with-ld-opt="-static"                                                     \
-        --with-http_sub_module                                                  &&  \
+        --with-http_ssl_module                                                  && \
+    make && \
     make install                                                                &&  \
     strip /usr/local/nginx/sbin/nginx
 
@@ -20,9 +32,10 @@ RUN ln -sf /dev/stdout /usr/local/nginx/logs/access.log                         
 
 FROM scratch
 
-COPY --from=build /etc/passwd /etc/group /etc/
 COPY --from=build /usr/local/nginx /usr/local/nginx
+COPY --from=build /etc/passwd /etc/group /etc/
 
+COPY nginx.conf /usr/local/nginx/conf/
 STOPSIGNAL SIGQUIT
 
 EXPOSE 80

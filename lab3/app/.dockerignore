@@ -1,0 +1,10 @@
+.gradle
+.idea
+build
+migration
+.dockerignore
+.gitignore
+docker-compose.yaml
+Dockerfile
+gradlew.bat
+README.md

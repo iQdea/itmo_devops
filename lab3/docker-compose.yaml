@@ -21,14 +21,10 @@ services:
 
   migrate:
     container_name: migrate
-    build: ../lab3/app/migration
     depends_on:
       - postgres
-    environment:
-      POSTGRES_JDBC_URL: jdbc:postgresql://postgres:${POSTGRES_PORT_INTERNAL}/${POSTGRES_DB}
-      POSTGRES_SCHEMA: ${POSTGRES_SCHEMA}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    image: flyway/flyway:9.15.0
+    command: -url=${POSTGRES_JDBC_URL} -schemas=${POSTGRES_SCHEMA} -user=${POSTGRES_USER} -password=${POSTGRES_PASSWORD} migrate
     volumes:
       - ./app/migration:/flyway/sql:ro
 

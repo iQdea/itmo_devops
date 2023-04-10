@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres
+    ports:
+      - ${POSTGRES_PORT_EXTERNAL}:${POSTGRES_PORT_INTERNAL}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGUSER: test # for healthchecks
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-U test" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    container_name: migrate
+    depends_on:
+      - postgres
+    image: flyway/flyway:9.15.0
+    command: -url=${POSTGRES_JDBC_URL} -schemas=${POSTGRES_SCHEMA} -user=${POSTGRES_USER} -password=${POSTGRES_PASSWORD} migrate
+    volumes:
+      - ./app/migration:/flyway/sql:ro
+
+  app-build:
+    container_name: java_app_build
+    build:
+      context: .
+      target: build
+      args:
+        DOCKER_BUILD_OPTS: --progress=plain
+    volumes:
+      - dependency-volume:/dependencies
+
+  app-prod:
+    container_name: java_app_prod
+    depends_on:
+      - app-build
+      - migrate
+      - postgres
+    build:
+      context: .
+      target: production
+      args:
+        DOCKER_BUILD_OPTS: --progress=plain
+    ports:
+      - ${APP_PORT_EXTERNAL}:${APP_PORT_INTERNAL}
+    environment:
+      SPRING_DATASOURCE_URL: ${POSTGRES_JDBC_URL}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SERVER_PORT: ${APP_PORT_INTERNAL}
+    volumes:
+      - dependency-volume:/dependencies
+      - ./static:/var/www:rw
+
+volumes:
+  dependency-volume:
+  pg_data:

@@ -10,8 +10,8 @@ import org.springframework.data.relational.core.mapping.Table;
 public class NotesModel {
     @Id
     @Column("id")
-    private Long id;
+    public Long id;
 
     @Column("content")
-    private String content;
+    public String content;
 }

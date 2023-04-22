@@ -5,6 +5,8 @@ module com.example.springBootApp {
     requires spring.boot.starter.web;
     requires spring.boot.starter.data.jdbc;
     requires java.sql;
+    requires com.fasterxml.jackson.databind;
+    requires com.fasterxml.jackson.core;
     requires lombok;
 
     exports com.example.springBootApp;

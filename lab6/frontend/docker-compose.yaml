@@ -1,0 +1,25 @@
+version: "3.9"
+
+x-compose:
+  project_name: ${COMPOSE_PROJECT_NAME}
+
+services:
+  frontend:
+    container_name: nginx-frontend
+    image: lab6-nginx-proxy:app
+    volumes:
+      - ./static:/usr/share/nginx/static/
+      - ./pages:/usr/share/nginx/html/
+      - ./nginx.conf:/usr/local/nginx/conf/nginx.conf
+    networks:
+      - lab-6-backend-net
+      - lab-6-frontend-net
+
+networks:
+  lab-6-frontend-net:
+    name: lab-6-frontend-net
+    driver: bridge
+
+  lab-6-backend-net:
+    name: lab-6-backend-net
+    external: true

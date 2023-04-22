@@ -1,0 +1,42 @@
+version: '3.9'
+
+x-compose:
+  project_name: ${COMPOSE_PROJECT_NAME}
+
+services:
+  openssl:
+    image: lab6-nginx-proxy:openssl
+    container_name: openssl_sidecar
+    volumes:
+      - cert_volume:/certs
+
+  nginx:
+    image: lab6-nginx-proxy:app
+    depends_on:
+      openssl:
+        condition: service_started
+    container_name: nginx_proxy
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PROXY_HTTP_PORT_EXTERNAL}:${NGINX_PROXY_HTTP_PORT_INTERNAL}"
+      - "${NGINX_PROXY_HTTPS_PORT_EXTERNAL}:${NGINX_PROXY_HTTPS_PORT_INTERNAL}"
+    volumes:
+      - ./static:/usr/share/nginx/static/
+      - ./pages:/usr/share/nginx/html/
+      - ./nginx.conf:/usr/local/nginx/conf/nginx.conf
+      - cert_volume:/certs:ro
+    networks:
+      - lab-6-backend-net
+      - lab-6-frontend-net
+
+volumes:
+  cert_volume:
+
+networks:
+  lab-6-backend-net:
+    name: lab-6-backend-net
+    external: true
+
+  lab-6-frontend-net:
+    name: lab-6-frontend-net
+    external: true

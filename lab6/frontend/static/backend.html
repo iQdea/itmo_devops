@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend request from browser</title>
+    <script>
+        async function sendRequest() {
+            let url = "https://localhost/app/db";
+            let data = await fetch(url);
+            let response = await data.json();
+            let table = document.getElementById("table-body");
+            while (table.firstChild) {
+                table.removeChild(table.firstChild);
+            }
+            if (Object.keys(response[0]).length === 0) {
+                let row = table.insertRow(0);
+                let noContentCell = row.insertCell(0);
+                noContentCell.colSpan = 2;
+                noContentCell.innerHTML = "No content";
+            } else {
+                for (let i = 0; i < response.length; i++) {
+                    let info = JSON.parse(response[i])
+                    let row = table.insertRow(i);
+                    let idCell = row.insertCell(0);
+                    let contentCell = row.insertCell(1);
+                    idCell.innerHTML = info.id;
+                    contentCell.innerHTML = info.content;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+<button onclick="sendRequest()">Send backend request</button>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Content</th>
+    </tr>
+    </thead>
+    <tbody id="table-body">
+    </tbody>
+</table>
+</body>
+</html>

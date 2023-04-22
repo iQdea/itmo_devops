@@ -1,0 +1,40 @@
+version: "3.9"
+
+x-compose:
+  project_name: ${COMPOSE_PROJECT_NAME}
+
+services:
+  migrate:
+    container_name: migrate
+    image: flyway/flyway:9.15.0
+    command: -url=${POSTGRES_JDBC_URL} -schemas=${POSTGRES_SCHEMA} -user=${POSTGRES_USER} -password=${POSTGRES_PASSWORD} migrate
+    volumes:
+      - ./app/migration:/flyway/sql:ro
+    networks:
+      - lab-6-db-net
+
+  app:
+    container_name: java_app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    image: lab6-backend:app
+    environment:
+      SPRING_DATASOURCE_URL: ${POSTGRES_JDBC_URL}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SERVER_PORT: ${APP_PORT_INTERNAL}
+    volumes:
+      - ./static:/var/www:rw
+    networks:
+      - lab-6-backend-net
+      - lab-6-db-net
+
+networks:
+  lab-6-backend-net:
+    name: lab-6-backend-net
+    driver: bridge
+
+  lab-6-db-net:
+    name: lab-6-db-net
+    external: true

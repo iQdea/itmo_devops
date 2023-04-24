@@ -37,7 +37,7 @@ COPY --from=build /etc/passwd /etc/group /etc/
 
 STOPSIGNAL SIGQUIT
 
-EXPOSE 80
+EXPOSE 80 443
 
 ENTRYPOINT ["/usr/local/nginx/sbin/nginx"]
 CMD ["-g", "daemon off;"]

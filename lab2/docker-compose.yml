@@ -1,4 +1,4 @@
-version: '3'
+version: '3.9'
 
 services:
   openssl:
@@ -9,9 +9,12 @@ services:
   app:
     build: .
     container_name: app
+    depends_on:
+      openssl:
+        condition: service_started
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "80:80"
       - "443:443"
     volumes:
       - ./static:/usr/share/nginx/html

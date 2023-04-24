@@ -27,17 +27,13 @@ RUN jlink \
 RUN cp -r "$JAVA_MINIMAL" /dependencies
 
 FROM scratch as production
-ENV JAVA_MINIMAL=/opt/jre
 
 VOLUME /dependencies
 
-COPY --from=build /dependencies "$JAVA_MINIMAL"
-ENV PATH="$PATH:$JAVA_MINIMAL/bin"
+COPY --from=build /dependencies /opt/jre
 
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar ./app.jar
 
-ENTRYPOINT [ "java" ]
-
-EXPOSE 8080
+ENTRYPOINT [ "/opt/jre/bin/java" ]
 CMD [ "-jar", "app.jar"]

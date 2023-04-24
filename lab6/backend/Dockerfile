@@ -23,14 +23,11 @@ RUN jlink \
 
 FROM alpine:latest as app
 
-ENV JAVA_MINIMAL=/opt/jre
-ENV PATH="$PATH:$JAVA_MINIMAL/bin"
 
-COPY --from=build $JAVA_MINIMAL $JAVA_MINIMAL
+COPY --from=build /opt/jre /opt/jre
 
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar ./app.jar
 
-ENTRYPOINT [ "java" ]
-EXPOSE 8080
+ENTRYPOINT [ "/opt/jre/bin/java" ]
 CMD [ "-jar", "app.jar"]

@@ -35,7 +35,6 @@ FROM scratch
 COPY --from=build /usr/local/nginx /usr/local/nginx
 COPY --from=build /etc/passwd /etc/group /etc/
 
-COPY nginx.conf /usr/local/nginx/conf/
 STOPSIGNAL SIGQUIT
 
 EXPOSE 80

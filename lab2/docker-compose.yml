@@ -2,12 +2,12 @@ version: '3'
 
 services:
   openssl:
-    image: testssl
+    build: openssl
     container_name: openssl_sidecar
     volumes:
       - cert_volume:/certs
   app:
-    image: app:latest
+    build: .
     container_name: app
     restart: unless-stopped
     ports:

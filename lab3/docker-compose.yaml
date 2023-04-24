@@ -32,7 +32,7 @@ services:
     container_name: java_app
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
       migrate:
         condition: service_completed_successfully
     build: ../lab3/app

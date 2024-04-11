@@ -1,0 +1,77 @@
+include:
+  - local: build/base.yml
+
+variables:
+  BUILD_SYSTEM_ENABLED: 'true'
+  BUILD_SYSTEM_CACHE_IMAGE: 'app/system'
+  BUILD_SYSTEM_TARGET: 'system'
+  BUILD_SYSTEM_ADDITIONAL_ARGS: ''
+
+  BUILD_DEPENDENCY_ENABLED: 'true'
+  BUILD_DEPENDENCY_CACHE_IMAGE: 'app/dependency'
+  BUILD_DEPENDENCY_TARGET: 'dependency'
+  BUILD_DEPENDENCY_ADDITIONAL_ARGS: '--build-arg DEPENDENCY_IMAGE=${FULL_BASE_IMAGE_NAME}:${CI_COMMIT_REF_NAME}'
+
+  BUILD_BUILDER_ENABLED: 'true'
+  BUILD_BUILDER_CACHE_IMAGE: 'app/build'
+  BUILD_BUILDER_TARGET: 'build'
+  BUILD_BUILDER_ADDITIONAL_ARGS: '--build-arg BUILD_IMAGE=${FULL_BASE_IMAGE_NAME}:${CI_COMMIT_REF_NAME}'
+
+  BUILD_APP_ENABLED: 'true'
+  BUILD_APP_RESULT_IMAGE: 'app/app'
+  BUILD_APP_TARGET: 'app'
+  BUILD_APP_ADDITIONAL_ARGS: '--build-arg BUILT_APP_IMAGE=${FULL_BASE_IMAGE_NAME}:${CI_COMMIT_REF_NAME}'
+
+stages:
+  - build-system
+  - build-dependency
+  - build-builder
+  - build-app
+
+build:system:
+  stage: build-system
+  extends: .build
+  variables:
+    STAGE_BASE_IMAGE: $BUILD_SYSTEM_CACHE_IMAGE
+    STAGE_CACHE_IMAGE: $BUILD_SYSTEM_CACHE_IMAGE
+    STAGE_BUILD_TARGET: $BUILD_SYSTEM_TARGET
+    BUILD_ADDITIONAL_ARGS: $BUILD_SYSTEM_ADDITIONAL_ARGS
+  rules:
+    - if: $BUILD_SYSTEM_ENABLED != "true"
+      when: never
+
+build:dependency:
+  stage: build-dependency
+  extends: .build
+  variables:
+    STAGE_BASE_IMAGE: $BUILD_SYSTEM_CACHE_IMAGE
+    STAGE_CACHE_IMAGE: $BUILD_DEPENDENCY_CACHE_IMAGE
+    STAGE_BUILD_TARGET: $BUILD_DEPENDENCY_TARGET
+    BUILD_ADDITIONAL_ARGS: $BUILD_DEPENDENCY_ADDITIONAL_ARGS
+  rules:
+    - if: $BUILD_DEPENDENCY_ENABLED != "true"
+      when: never
+
+build:builder:
+  stage: build-builder
+  extends: .build
+  variables:
+    STAGE_BASE_IMAGE: $BUILD_DEPENDENCY_CACHE_IMAGE
+    STAGE_CACHE_IMAGE: $BUILD_BUILDER_CACHE_IMAGE
+    STAGE_BUILD_TARGET: $BUILD_BUILDER_TARGET
+    BUILD_ADDITIONAL_ARGS: $BUILD_BUILDER_ADDITIONAL_ARGS
+  rules:
+    - if: $BUILD_BUILDER_ENABLED != "true"
+      when: never
+
+build:app:
+  stage: build-app
+  extends: .build
+  variables:
+    STAGE_BASE_IMAGE: $BUILD_BUILDER_CACHE_IMAGE
+    STAGE_CACHE_IMAGE: $BUILD_APP_RESULT_IMAGE
+    STAGE_BUILD_TARGET: $BUILD_APP_TARGET
+    BUILD_ADDITIONAL_ARGS: $BUILD_APP_ADDITIONAL_ARGS
+  rules:
+    - if: $BUILD_APP_ENABLED != "true"
+      when: never

@@ -1,0 +1,24 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_DRIVER: "overlay"
+
+before_script:
+  - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+
+.build:
+  variables:
+    BUILD_ADDITIONAL_ARGS: ''
+    FULL_BASE_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/${STAGE_BASE_IMAGE}"
+    FULL_CACHE_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/${STAGE_CACHE_IMAGE}"
+  script:
+    - docker pull "${FULL_BASE_IMAGE_NAME}:${CI_COMMIT_REF_NAME}" || true
+    - docker build --target "${STAGE_BUILD_TARGET}" --cache-from "${FULL_BASE_IMAGE_NAME}:${CI_COMMIT_REF_NAME}" --tag "${FULL_CACHE_IMAGE_NAME}:${CI_COMMIT_REF_NAME}" --tag "${FULL_CACHE_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}" -f Dockerfile ${BUILD_ADDITIONAL_ARGS} .
+    - | 
+      if [[ "${CI_COMMIT_REF_NAME}" == "master" ]]; then
+        docker tag "${FULL_CACHE_IMAGE_NAME}:${CI_COMMIT_REF_NAME}" "${FULL_CACHE_IMAGE_NAME}:latest"
+      fi
+    - docker push --all-tags "${FULL_CACHE_IMAGE_NAME}"

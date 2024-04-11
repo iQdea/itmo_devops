@@ -1,0 +1,45 @@
+include:
+  - project: 'devops_alpha_beta/repositories/lab-7-ci'
+    ref: master
+    file: "/build/multilayer.yml"
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "master"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+variables:
+  SYSTEM_IMAGE: "azul/zulu-openjdk-alpine:17-latest"
+  BUILD_SYSTEM_ADDITIONAL_ARGS: "--build-arg SYSTEM_IMAGE=${SYSTEM_IMAGE}"
+
+  BUILD_SYSTEM_CACHE_IMAGE: "backend/system"
+  BUILD_DEPENDENCY_CACHE_IMAGE: "backend/dependency"
+  BUILD_BUILDER_CACHE_IMAGE: "backend/build"
+  BUILD_APP_RESULT_IMAGE: "backend/app"
+
+build:system:
+  rules:
+    - changes:
+      - Dockerfile
+      - .gitlab-ci.yml
+
+build:dependency:
+  rules:
+    - changes:
+      - Dockerfile
+      - .gitlab-ci.yml
+      - packages.txt
+
+build:builder:
+  rules:
+    - changes:
+      - .gitlab-ci.yml
+      - Dockerfile
+      - gradle/**
+      - build.gradle
+      - settings.gradle
+      - src/**
+
+build:app:
+  rules:
+    - when: always
